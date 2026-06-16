@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ROLL CHESS Rules v1.1</title>
+  <title>ROLL CHESS Rules v1.2</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet" />
   <style>
@@ -12,94 +12,121 @@
     .prose h2 { font-family: 'Oswald', sans-serif; font-size: 1.35rem; margin-top: 2rem; margin-bottom: 0.75rem; color: #fafafa; }
     .prose h3 { font-size: 0.95rem; color: #a1a1aa; margin-top: 1.25rem; margin-bottom: 0.5rem; }
     .prose p, .prose li { font-size: 0.85rem; line-height: 1.65; color: #a1a1aa; }
+    .prose strong { color: #e4e4e7; font-weight: 600; }
     .prose table { width: 100%; font-size: 0.75rem; border-collapse: collapse; margin: 1rem 0; }
-    .prose th, .prose td { border: 1px solid #3f3f46; padding: 0.5rem; text-align: left; }
+    .prose th, .prose td { border: 1px solid #3f3f46; padding: 0.5rem; text-align: left; vertical-align: top; }
     .prose th { background: #18181b; color: #e4e4e7; }
+    .formula { background:#111114; border:1px solid #3f3f46; border-radius:8px; padding:0.9rem 1rem; font-size:0.8rem; color:#e4e4e7; margin:1rem 0; }
+    .formula .v { color:#fbbf24; }
+    .gain { color:#4f86f7; } .loss { color:#ea580c; }
   </style>
 </head>
 <body class="min-h-screen">
   <header class="border-b border-zinc-800 px-4 py-5 max-w-3xl mx-auto flex justify-between items-center">
     <div>
-      <p class="text-[10px] uppercase tracking-[0.25em] text-zinc-500">v1.1</p>
+      <p class="text-[10px] uppercase tracking-[0.25em] text-zinc-500">v1.2</p>
       <h1 class="display text-2xl font-bold">Hybrid Competition Rules</h1>
     </div>
-    <a href="index.html" class="text-xs text-zinc-500 hover:text-zinc-300">← Home</a>
+    <a href="index.html" class="text-xs text-zinc-500 hover:text-zinc-300">&larr; Home</a>
   </header>
   <main class="max-w-3xl mx-auto px-4 py-8 prose">
-    <p><strong>Effective:</strong> June 2026 · <strong>Format:</strong> Alternating mat rounds and chess games with linked consequences</p>
+    <p><strong>Effective:</strong> June 2026 &middot; <strong>Format:</strong> Alternating mat rounds and chess games with a single, scaled clock link. Supersedes v1.1.</p>
 
     <h2>1. Overview</h2>
-    <p>ROLL CHESS is a hybrid competition where <strong>mat performance directly modifies chess conditions</strong>. Competitors alternate between a <strong>Mat Phase</strong> (timed BJJ sparring or positional rounds) and a <strong>Board Phase</strong> (standard chess, rapid or blitz per event tier).</p>
+    <p>ROLL CHESS is a hybrid competition where <strong>mat performance sets the clock you take to the board</strong>. Competitors alternate between a <strong>Mat Phase</strong> (timed BJJ sparring or positional rounds) and a <strong>Board Phase</strong> (standard chess, rapid or blitz per tier). One mat score drives one clock adjustment &mdash; no second penalty system.</p>
 
     <h2>2. Equipment</h2>
     <ul class="list-disc pl-5 space-y-1">
-      <li>Standard chess set and clock (digital recommended)</li>
+      <li>Standard chess set and clock (digital required for sub-second scaling)</li>
       <li>BJJ gi or no-gi per event rules</li>
       <li>Mat area and board area separated but visible to both competitors</li>
-      <li>Optional: ROLL CHESS spectrum tracker (trainer app or official score sheet)</li>
+      <li>ROLL CHESS clock card or trainer app to compute the adjustment</li>
     </ul>
 
     <h2>3. Match Structure</h2>
     <h3>3.1 Default Format (Standard Hybrid)</h3>
     <table>
       <tr><th>Segment</th><th>Duration</th><th>Notes</th></tr>
-      <tr><td>Mat Round 1</td><td>5 min</td><td>Positional or rolling per division</td></tr>
-      <tr><td>Board Game 1</td><td>10+5 rapid</td><td>Consequences from Mat 1 apply</td></tr>
-      <tr><td>Mat Round 2</td><td>5 min</td><td>Fresh positional start</td></tr>
-      <tr><td>Board Game 2</td><td>10+5 rapid</td><td>Consequences from Mat 2 apply</td></tr>
+      <tr><td>Mat Round 1</td><td>5 min</td><td>Neutral positional start</td></tr>
+      <tr><td>Board Game 1</td><td>10+5 base</td><td>Clock adjusted by Mat 1</td></tr>
+      <tr><td>Mat Round 2</td><td>5 min</td><td>Neutral positional start</td></tr>
+      <tr><td>Board Game 2</td><td>10+5 base</td><td>Clock adjusted by Mat 2</td></tr>
     </table>
     <h3>3.2 Sprint Format</h3>
-    <p>One 4-minute mat round → one 5+3 blitz game. Used for brackets and open mat nights.</p>
+    <p>One 4-minute mat round &rarr; one 5+3 blitz game. Used for brackets and open mat nights.</p>
 
-    <h2>4. The Mat → Board Spectrum</h2>
+    <h2>4. The Clock Engine</h2>
+    <h3>4.1 One mat score (RMS)</h3>
+    <p>Each mat round produces a single <strong>Round Mat Score</strong> from &minus;25 to +20. This is the only mat output.</p>
     <table>
-      <tr><th>Range</th><th>State</th><th>Board Effect</th></tr>
-      <tr><td>0–29</td><td>Mat-heavy</td><td>−30 sec starting time, no takeback offers</td></tr>
-      <tr><td>30–44</td><td>Fatigued</td><td>−15 sec starting time</td></tr>
-      <tr><td>45–55</td><td>Neutral</td><td>Standard time</td></tr>
-      <tr><td>56–69</td><td>Composed</td><td>+5 sec starting time</td></tr>
-      <tr><td>70–100</td><td>Board-ready</td><td>+10 sec, optional second takeback in casual tiers</td></tr>
+      <tr><th>Round outcome</th><th>RMS</th></tr>
+      <tr><td>Dominant control / clean submission attempt</td><td class="gain">+15 to +20</td></tr>
+      <tr><td>Solid positional maintenance</td><td class="gain">+5 to +10</td></tr>
+      <tr><td>Neutral round</td><td>0</td></tr>
+      <tr><td>Repeated defensive errors</td><td class="loss">&minus;5 to &minus;10</td></tr>
+      <tr><td>Tap, stalling, or safety violation</td><td class="loss">&minus;15 to &minus;25</td></tr>
     </table>
+    <h3>4.1.1 Tap timing (anti-gaming)</h3>
+    <p>A tap is scored on a clock so it cannot be used to skip a hard round cheaply. An <strong>immediate tap is the maximum &minus;25</strong>; the penalty eases the longer you genuinely defend, down to a floor of &minus;15 for a tap in the final stretch of the round.</p>
+    <div class="formula"><span class="v">RMS_tap</span> = &minus;25 + 10 &times; ( time survived &divide; round length )</div>
+    <p>You can never tap your way to a soft landing &mdash; bailing early costs the most.</p>
+    <h3>4.2 Conversion to board time</h3>
+    <p>The RMS converts <strong>continuously</strong> into a starting-time adjustment, expressed as a fraction of the game's base time &mdash; so it scales correctly across every time control and has no band cliffs.</p>
+    <div class="formula">
+      <span class="v">&Delta;t</span> = base &times; cap &times; ( RMS &divide; max )<br>
+      &nbsp;&nbsp;max = 20 for gains, 25 for losses<br>
+      &nbsp;&nbsp;cap = the tier swing (gain cap on +RMS, loss cap on &minus;RMS)
+    </div>
+    <table>
+      <tr><th>Tier</th><th class="gain">Gain cap</th><th class="loss">Loss cap</th></tr>
+      <tr><td>Light</td><td class="gain">+3% of base</td><td class="loss">&minus;5% of base</td></tr>
+      <tr><td>Medium</td><td class="gain">+5% of base</td><td class="loss">&minus;8% of base</td></tr>
+      <tr><td>Heavy</td><td class="gain">+6% of base</td><td class="loss">&minus;12% of base</td></tr>
+    </table>
+    <p>The loss cap is deliberately larger than the gain cap: a mistake on the mat costs more than dominance pays. The asymmetry is fixed and bounded &mdash; it can no longer stack into a runaway deficit.</p>
+    <h3>4.3 Scaling examples (Medium tier)</h3>
+    <table>
+      <tr><th>Time control</th><th>Base</th><th class="gain">Max gain</th><th class="loss">Max loss</th></tr>
+      <tr><td>5+3 blitz</td><td>300s</td><td class="gain">+15s</td><td class="loss">&minus;24s</td></tr>
+      <tr><td>10+5 rapid</td><td>600s</td><td class="gain">+30s</td><td class="loss">&minus;48s</td></tr>
+      <tr><td>15+10 rapid</td><td>900s</td><td class="gain">+45s</td><td class="loss">&minus;72s</td></tr>
+    </table>
+    <p>Worked example, Medium, 10+5: a dominant Mat 1 (RMS +18) gives &Delta;t = 600 &times; 5% &times; (18&divide;20) = <span class="gain">+27s</span>, so Board 1 starts at 10:27. A tap in Mat 2 (RMS &minus;20) gives 600 &times; 8% &times; (20&divide;25) = <span class="loss">&minus;38s</span>, so Board 2 starts at 9:22.</p>
+    <h3>4.4 Floor</h3>
+    <p>Starting time never drops below <strong>60% of base</strong>. Every board game stays real chess.</p>
+    <h3>4.5 Heavy-tier increment clause (optional)</h3>
+    <p>On a tap at Heavy tier, the first 5 board moves earn no increment, so the deficit cannot be instantly refilled.</p>
 
-    <h2>5. Mat Phase Scoring (DQS)</h2>
-    <table>
-      <tr><th>Outcome</th><th>DQS</th><th>Spectrum Δ</th></tr>
-      <tr><td>Dominant control / clean submission attempt</td><td>+15 to +20</td><td>Toward Board</td></tr>
-      <tr><td>Solid positional maintenance</td><td>+5 to +10</td><td>Slight toward Board</td></tr>
-      <tr><td>Neutral stalemate</td><td>0</td><td>No change</td></tr>
-      <tr><td>Repeated defensive errors</td><td>−5 to −10</td><td>Toward Mat</td></tr>
-      <tr><td>Tap, stalling, or safety violation</td><td>−15 to −25</td><td>Strong toward Mat</td></tr>
-    </table>
+    <h2>5. The Readiness Spectrum (display &amp; tiebreak)</h2>
+    <p>A 0&ndash;100 readiness gauge starts at 50 and is nudged by <strong>RMS &divide; 2</strong> each round (clamped 0&ndash;100). In v1.2 it is a running picture of your night and a tiebreaker only &mdash; it no longer sets the clock. The Clock Engine (Section 4) owns time. This removes the v1.1 problem where the spectrum and a separate penalty table both taxed the same mat event.</p>
 
-    <h2>6. Board Phase Consequences</h2>
-    <h3>6.2 Graduated Penalties (v1.1)</h3>
-    <table>
-      <tr><th>Mat Event</th><th>Light</th><th>Medium</th><th>Heavy</th></tr>
-      <tr><td>Single DQS −5</td><td>Warning only</td><td>−5 sec</td><td>−10 sec</td></tr>
-      <tr><td>DQS −10 or worse</td><td>−5 sec</td><td>−15 sec</td><td>−30 sec</td></tr>
-      <tr><td>Tap in mat round</td><td>−10 sec</td><td>−20 sec</td><td>−45 sec + blitz only next board</td></tr>
-      <tr><td>Two consecutive bad rounds</td><td>−10 sec</td><td>−25 sec</td><td>Must play board before 60 sec recovery</td></tr>
-    </table>
+    <h2>6. Carryover</h2>
+    <ul class="list-disc pl-5 space-y-1">
+      <li>The <strong>mat</strong> resets to a neutral start every round.</li>
+      <li>Each board game's time adjustment comes <strong>only from the mat round immediately before it</strong>. Adjustments do not stack across the match.</li>
+      <li>The <strong>readiness spectrum</strong> is the one value that accumulates across the night, for display and the aggregate-spectrum tiebreak.</li>
+    </ul>
 
     <h2>7. Winning the Match</h2>
-    <p>Most board points (wins = 1, draw = 0.5 each). Tiebreakers: aggregate spectrum, combined mat DQS, Armageddon blitz.</p>
+    <p>Most board points (win = 1, draw = 0.5 each). Tiebreakers, in order: aggregate spectrum, total RMS, then an Armageddon blitz.</p>
 
     <h2>8. Divisions</h2>
     <table>
-      <tr><th>Division</th><th>Mat</th><th>Board</th><th>Tier Default</th></tr>
+      <tr><th>Division</th><th>Mat</th><th>Board base</th><th>Tier</th></tr>
       <tr><td>Youth</td><td>Positional, 3 min</td><td>5+3</td><td>Light</td></tr>
       <tr><td>Adult Rec</td><td>5 min roll</td><td>10+5</td><td>Light / Medium</td></tr>
       <tr><td>Competitive</td><td>5 min roll</td><td>10+5</td><td>Medium</td></tr>
       <tr><td>Open</td><td>6 min roll</td><td>5+3</td><td>Medium / Heavy</td></tr>
     </table>
 
-    <h2>10. Trainer App Alignment</h2>
-    <p>The <a href="trainer.html" class="text-blue-400 hover:underline">ROLL CHESS Trainer v0.5</a> simulates these rules. Training Mode is consequence-free; Recovery Mode applies tiered time penalties after poor mat choices.</p>
+    <h2>9. Trainer Alignment</h2>
+    <p>The <a href="trainer.html" class="text-blue-400 hover:underline">ROLL CHESS Trainer</a> simulates these rules. Training Mode is consequence-free; Recovery Mode applies the Clock Engine at the chosen tier. Note: the live trainer still runs the v1.1 band model and is being updated to v1.2.</p>
 
-    <p class="text-zinc-600 text-xs pt-8 border-t border-zinc-800 mt-10">ROLL CHESS — Mat performance is board preparation.</p>
+    <p class="text-zinc-600 text-xs pt-8 border-t border-zinc-800 mt-10">ROLL CHESS v1.2 &mdash; One mat score, one scaled clock. Mat performance is board preparation.</p>
   </main>
   <footer class="text-center py-8 text-xs text-zinc-600 border-t border-zinc-900">
-    <a href="trainer.html" class="hover:text-zinc-400">Open Trainer</a> ·
+    <a href="trainer.html" class="hover:text-zinc-400">Open Trainer</a> &middot;
+    <a href="index.html" class="hover:text-zinc-400">Overview</a> &middot;
     <a href="https://github.com/lylegill02-cpu/roll-chess" class="hover:text-zinc-400">GitHub</a>
   </footer>
 </body>

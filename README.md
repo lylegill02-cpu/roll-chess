@@ -9,21 +9,22 @@ ROLL CHESS is a hybrid training and competition system that combines Brazilian J
 | Page | GitHub Pages | Inkwell |
 |------|--------------|---------|
 | **Landing** | [lylegill02-cpu.github.io/roll-chess](https://lylegill02-cpu.github.io/roll-chess) | [inkwell.wiki/roll-chess](https://inkwell.wiki/roll-chess) |
-| **Trainer v0.5** | […/trainer.html](https://lylegill02-cpu.github.io/roll-chess/trainer.html) | [inkwell.wiki/roll-chess-trainer](https://inkwell.wiki/roll-chess-trainer) |
-| **Rules v1.1** | […/rules.html](https://lylegill02-cpu.github.io/roll-chess/rules.html) | [inkwell.wiki/roll-chess-rules](https://inkwell.wiki/roll-chess-rules) |
+| **Trainer v0.6** | […/trainer.html](https://lylegill02-cpu.github.io/roll-chess/trainer.html) | [inkwell.wiki/roll-chess-trainer](https://inkwell.wiki/roll-chess-trainer) |
+| **Rules v1.2** | […/rules.html](https://lylegill02-cpu.github.io/roll-chess/rules.html) | [inkwell.wiki/roll-chess-rules](https://inkwell.wiki/roll-chess-rules) |
 
 ## What is it?
 
 - **Mat** = Physical round performance and decision quality
 - **Board** = Mental recovery and decision-making under pressure
 
-## Features (v0.5)
+## Features (v0.6)
 
 - 12 realistic BJJ positions
+- Mat-round timer with tap-out penalty curve
+- v1.2 clock engine (RMS-based board time)
 - Tiered Recovery Mode (Light / Medium / Heavy)
 - Live Mat → Board spectrum
 - End-of-session summary
-- Landing page + dedicated trainer
 
 ## How to Use
 
@@ -45,8 +46,9 @@ ROLL CHESS trains the connection between them.
 
 ```
 index.html    → Landing page
-trainer.html  → Mat → Board Trainer v0.5
-rules.md      → Hybrid Competition Rules v1.1
+trainer.html  → Mat → Board Trainer v0.6
+rules.html    → Hybrid Competition Rules v1.2
+rules.md      → Rules (markdown source)
 ```
 
 ## License

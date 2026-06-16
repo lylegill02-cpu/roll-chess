@@ -33,7 +33,7 @@
   <header class="border-b border-zinc-800 px-4 py-5 max-w-3xl mx-auto">
     <div class="flex items-start justify-between gap-4">
       <div>
-        <p class="text-[10px] uppercase tracking-[0.25em] text-zinc-500">v0.5</p>
+        <p class="text-[10px] uppercase tracking-[0.25em] text-zinc-500">v0.6</p>
         <h1 class="display text-2xl md:text-3xl font-bold">ROLL CHESS</h1>
         <p class="text-sm text-zinc-400 mt-1">Mat → Board Trainer</p>
       </div>
@@ -85,10 +85,12 @@
 
       <!-- Mat phase -->
       <div id="mat-card" class="border border-zinc-800 p-5 space-y-4 card-enter">
-        <p class="text-[10px] uppercase tracking-[0.2em] text-orange-500">Mat Phase</p>
+        <div class="flex items-center justify-between"><p class="text-[10px] uppercase tracking-[0.2em] text-orange-500">Mat Phase</p><p id="mat-timer" class="text-sm font-semibold text-orange-400">Mat round 12s</p></div>
         <h3 id="mat-title" class="display text-xl"></h3>
         <p id="mat-desc" class="text-sm text-zinc-400 leading-relaxed"></p>
         <div id="mat-choices" class="space-y-2"></div>
+        <button id="tap-btn" class="w-full text-left text-sm border border-red-900 text-red-300 px-4 py-3 hover:border-red-500 transition">Tap out (-25)</button>
+        <p class="text-[11px] text-zinc-600">Tapping instantly is the maximum loss. The longer you hold position, the smaller the penalty.</p>
       </div>
 
       <!-- Board phase -->
@@ -97,6 +99,7 @@
           <p class="text-[10px] uppercase tracking-[0.2em] text-blue-500">Board Phase</p>
           <p id="timer" class="text-sm font-semibold text-blue-400">30s</p>
         </div>
+        <p id="board-readout" class="text-[11px] text-zinc-500"></p>
         <pre id="board-fen" class="text-xs bg-zinc-950 border border-zinc-800 p-3 overflow-x-auto text-zinc-300"></pre>
         <p id="board-prompt" class="text-sm text-zinc-300"></p>
         <div id="board-choices" class="space-y-2"></div>
@@ -116,23 +119,21 @@
         <p id="sum-note" class="text-sm text-zinc-400 leading-relaxed"></p>
         <div class="flex gap-2">
           <button id="restart-btn" class="flex-1 border border-zinc-700 py-3 text-sm hover:border-zinc-500">New Session</button>
-          <a href="rules.md" class="flex-1 text-center border border-zinc-700 py-3 text-sm hover:border-zinc-500">Rules</a>
+          <a href="rules.html" class="flex-1 text-center border border-zinc-700 py-3 text-sm hover:border-zinc-500">Rules</a>
         </div>
       </div>
     </section>
   </main>
 
   <footer class="text-center py-8 text-xs text-zinc-500 border-t border-zinc-800 mt-12">
-    ROLL CHESS v0.5 • Mat → Board Spectrum<br>
+    ROLL CHESS v0.6 • Mat → Board · v1.2 clock engine<br>
     <a href="https://github.com/lylegill02-cpu/roll-chess" class="hover:text-zinc-400">GitHub</a>
   </footer>
 
   <script>
-    const TIERS = {
-      light:  { penalty: 5,  baseTime: 28 },
-      medium: { penalty: 12, baseTime: 22 },
-      heavy:  { penalty: 20, baseTime: 15 }
-    };
+    const BOARD_BASE = 30;   // neutral seconds to solve a board decision
+    const MAT_ROUND = 12;    // mat-round length; tap-timing window
+    const TIER_CAPS = { light:{g:0.03,l:0.05}, medium:{g:0.05,l:0.08}, heavy:{g:0.06,l:0.12} };
 
     const SCENARIOS = [
       {
@@ -281,213 +282,31 @@
       }
     ];
 
-    let state = {
-      round: 0,
-      spectrum: 50,
-      recovery: false,
-      tier: 'medium',
-      matGood: 0,
-      matTotal: 0,
-      boardCorrect: 0,
-      boardTotal: 0,
-      recoveryHits: 0,
-      timerId: null,
-      matChoice: null
-    };
-
+    let state = { round:0, spectrum:50, recovery:false, tier:'medium', rmsSum:0, matTotal:0, boardCorrect:0, boardTotal:0, taps:0, timerId:null, matTimerId:null, matElapsed:0, lastRms:0 };
     const $ = id => document.getElementById(id);
-
-    function show(id) {
-      ['screen-setup', 'screen-session', 'screen-summary'].forEach(s => $(s).classList.add('hidden'));
-      $(id).classList.remove('hidden');
-    }
-
-    function spectrumCaption(v) {
-      if (v < 30) return 'Mat-heavy — board decisions will be harder';
-      if (v < 45) return 'Fatigued — reduced clarity on the board';
-      if (v < 55) return 'Neutral — equal mat and board readiness';
-      if (v < 70) return 'Composed — slight board advantage';
-      return 'Board-ready — sharp tactical window';
-    }
-
-    function updateSpectrum() {
-      state.spectrum = Math.max(0, Math.min(100, state.spectrum));
-      $('spectrum-value').textContent = state.spectrum;
-      $('spectrum-marker').style.left = `calc(${state.spectrum}% - 8px)`;
-      $('spectrum-caption').textContent = spectrumCaption(state.spectrum);
-    }
-
-    function matScore(q) {
-      if (q === 'good') return 1;
-      if (q === 'neutral') return 0.5;
-      return 0;
-    }
-
-    function renderMat() {
-      const s = SCENARIOS[state.round];
-      $('round-label').textContent = `Round ${state.round + 1} / ${SCENARIOS.length}`;
-      $('mat-title').textContent = s.mat.title;
-      $('mat-desc').textContent = s.mat.desc;
-      const box = $('mat-choices');
-      box.innerHTML = '';
-      s.mat.choices.forEach((c, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'w-full text-left text-sm border border-zinc-800 px-4 py-3 hover:border-orange-500 hover:bg-zinc-950 transition';
-        btn.textContent = c.text;
-        btn.onclick = () => pickMat(c);
-        box.appendChild(btn);
-      });
-      $('mat-card').classList.remove('hidden');
-      $('board-card').classList.add('hidden');
-    }
-
-    function pickMat(choice) {
-      state.matChoice = choice;
-      state.matTotal++;
-      state.matGood += matScore(choice.q);
-      state.spectrum += choice.d;
-      if (state.recovery && choice.q === 'bad') state.recoveryHits++;
-      updateSpectrum();
-      $('mat-choices').querySelectorAll('button').forEach(b => b.disabled = true);
-      setTimeout(showBoard, 400);
-    }
-
-    function boardTime() {
-      const t = TIERS[state.tier];
-      let sec = t.baseTime;
-      if (state.recovery) {
-        sec -= Math.floor((50 - state.spectrum) / 5);
-        if (state.matChoice?.q === 'bad') sec -= t.penalty;
-      } else {
-        sec += Math.floor((state.spectrum - 50) / 8);
-      }
-      return Math.max(8, sec);
-    }
-
-    function showBoard() {
-      const s = SCENARIOS[state.round];
-      $('mat-card').classList.add('hidden');
-      $('board-card').classList.remove('hidden');
-      $('board-fen').textContent = s.board.fen;
-      $('board-prompt').textContent = s.board.prompt;
-      const box = $('board-choices');
-      box.innerHTML = '';
-      s.board.choices.forEach(c => {
-        const btn = document.createElement('button');
-        btn.className = 'w-full text-left text-sm border border-zinc-800 px-4 py-3 hover:border-blue-500 hover:bg-zinc-950 transition';
-        btn.textContent = c.text;
-        btn.onclick = () => pickBoard(c, btn);
-        box.appendChild(btn);
-      });
-      startTimer(boardTime());
-    }
-
-    function startTimer(sec) {
-      clearInterval(state.timerId);
-      let left = sec;
-      const el = $('timer');
-      el.textContent = left + 's';
-      el.classList.add('timer-pulse');
-      state.timerId = setInterval(() => {
-        left--;
-        el.textContent = left + 's';
-        if (left <= 0) {
-          clearInterval(state.timerId);
-          el.classList.remove('timer-pulse');
-          timeoutBoard();
-        }
-      }, 1000);
-    }
-
-    function lockBoard() {
-      clearInterval(state.timerId);
-      $('timer').classList.remove('timer-pulse');
-      $('board-choices').querySelectorAll('button').forEach(b => b.disabled = true);
-    }
-
-    function pickBoard(choice, btn) {
-      lockBoard();
-      state.boardTotal++;
-      if (choice.correct) {
-        state.boardCorrect++;
-        btn.classList.add('border-green-600', 'bg-green-950');
-        state.spectrum += 4;
-      } else {
-        btn.classList.add('border-red-600', 'bg-red-950');
-        state.spectrum -= 6;
-      }
-      updateSpectrum();
-      setTimeout(nextRound, 700);
-    }
-
-    function timeoutBoard() {
-      lockBoard();
-      state.boardTotal++;
-      $('board-prompt').textContent += ' — Time expired.';
-      state.spectrum -= 8;
-      updateSpectrum();
-      setTimeout(nextRound, 900);
-    }
-
-    function nextRound() {
-      state.round++;
-      if (state.round >= SCENARIOS.length) return finish();
-      renderMat();
-    }
-
-    function finish() {
-      show('screen-summary');
-      const matPct = Math.round((state.matGood / state.matTotal) * 100);
-      const boardPct = Math.round((state.boardCorrect / state.boardTotal) * 100);
-      $('sum-mat').textContent = matPct + '%';
-      $('sum-board').textContent = boardPct + '%';
-      $('sum-spectrum').textContent = state.spectrum;
-      $('sum-recovery').textContent = state.recovery ? state.recoveryHits : '—';
-      let note = '';
-      if (state.spectrum >= 60 && boardPct >= 70) note = 'Strong connection — mat composure carried into board clarity.';
-      else if (state.spectrum < 40) note = 'Mat cost dominated. Focus on safer defaults before class.';
-      else if (boardPct < 50) note = 'Board decisions broke down under pressure. Try Recovery Mode at Light tier.';
-      else note = 'Solid session. Review positions where mat and board diverged.';
-      $('sum-note').textContent = note;
-    }
-
-    function startSession() {
-      state = {
-        round: 0,
-        spectrum: 50,
-        recovery: $('recovery-mode').checked,
-        tier: state.tier || 'medium',
-        matGood: 0,
-        matTotal: 0,
-        boardCorrect: 0,
-        boardTotal: 0,
-        recoveryHits: 0,
-        timerId: null,
-        matChoice: null
-      };
-      $('mode-label').textContent = state.recovery
-        ? `Recovery · ${state.tier}`
-        : 'Training';
-      updateSpectrum();
-      show('screen-session');
-      renderMat();
-    }
-
-    $('recovery-mode').addEventListener('change', e => {
-      $('tier-wrap').classList.toggle('hidden', !e.target.checked);
-    });
-
-    document.querySelectorAll('.tier-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        state.tier = btn.dataset.tier;
-        document.querySelectorAll('.tier-btn').forEach(b => {
-          b.classList.toggle('border-orange-500', b === btn);
-          b.classList.toggle('bg-orange-950', b === btn);
-        });
-      });
-    });
-
-    $('start-btn').onclick = startSession;
+    function show(id){ ['screen-setup','screen-session','screen-summary'].forEach(s=>$(s).classList.add('hidden')); $(id).classList.remove('hidden'); }
+    function spectrumCaption(v){ if(v<30) return 'Mat-heavy — biggest clock deficit'; if(v<45) return 'Fatigued — slight deficit'; if(v<55) return 'Neutral — standard board time'; if(v<70) return 'Composed — slight cushion'; return 'Board-ready — best cushion'; }
+    function updateSpectrum(){ state.spectrum=Math.max(0,Math.min(100,state.spectrum)); $('spectrum-value').textContent=Math.round(state.spectrum); $('spectrum-marker').style.left=`calc(${state.spectrum}% - 8px)`; $('spectrum-caption').textContent=spectrumCaption(state.spectrum); }
+    function clampRms(r){ return Math.max(-25,Math.min(20,Math.round(r))); }
+    function rmsToFraction(rms){ const c=TIER_CAPS[state.tier]; return rms>=0 ? c.g*(rms/20) : c.l*(rms/25); }
+    function boardSeconds(rms){ if(!state.recovery) return BOARD_BASE; const frac=rmsToFraction(rms); return Math.max(Math.round(BOARD_BASE*0.6), Math.round(BOARD_BASE*(1+frac))); }
+    function renderMat(){ const s=SCENARIOS[state.round]; $('round-label').textContent=`Round ${state.round+1} / ${SCENARIOS.length}`; $('mat-title').textContent=s.mat.title; $('mat-desc').textContent=s.mat.desc; const box=$('mat-choices'); box.innerHTML=''; s.mat.choices.forEach(c=>{ const btn=document.createElement('button'); btn.className='w-full text-left text-sm border border-zinc-800 px-4 py-3 hover:border-orange-500 hover:bg-zinc-950 transition'; btn.textContent=c.text; btn.onclick=()=>resolveMat(clampRms(c.d*2), c.q==='bad'?'bad':'defend'); box.appendChild(btn); }); const tb=$('tap-btn'); tb.disabled=false; $('mat-card').classList.remove('hidden'); $('board-card').classList.add('hidden'); startMatTimer(); }
+    function tapCost(){ const f=Math.min(1, state.matElapsed/MAT_ROUND); return clampRms(-25 + 10*f); }
+    function startMatTimer(){ clearInterval(state.matTimerId); state.matElapsed=0; const t=$('mat-timer'), tap=$('tap-btn'); const paint=()=>{ t.textContent=`Mat round ${Math.max(0,MAT_ROUND-state.matElapsed)}s`; tap.textContent=`Tap out (${tapCost()})`; }; paint(); state.matTimerId=setInterval(()=>{ state.matElapsed++; if(state.matElapsed>=MAT_ROUND){ paint(); clearInterval(state.matTimerId); resolveMat(-18,'caught'); return; } paint(); },1000); }
+    function tapOut(){ resolveMat(tapCost(),'tap'); }
+    function resolveMat(rms,kind){ clearInterval(state.matTimerId); state.lastRms=rms; state.rmsSum+=rms; state.matTotal++; if(kind==='tap'||kind==='caught') state.taps++; state.spectrum+=rms/2; updateSpectrum(); $('mat-choices').querySelectorAll('button').forEach(b=>b.disabled=true); $('tap-btn').disabled=true; setTimeout(showBoard,380); }
+    function showBoard(){ const s=SCENARIOS[state.round]; $('mat-card').classList.add('hidden'); $('board-card').classList.remove('hidden'); $('board-fen').textContent=s.board.fen; $('board-prompt').textContent=s.board.prompt; const sec=boardSeconds(state.lastRms); const rd=$('board-readout'); if(state.recovery){ const frac=rmsToFraction(state.lastRms); const pct=(frac*100).toFixed(1); rd.textContent=`Mat RMS ${state.lastRms>=0?'+':''}${state.lastRms} -> ${frac>=0?'+':''}${pct}% of base -> ${sec}s`; } else { rd.textContent=`Training — fixed ${sec}s, no consequence`; } const box=$('board-choices'); box.innerHTML=''; s.board.choices.forEach(c=>{ const btn=document.createElement('button'); btn.className='w-full text-left text-sm border border-zinc-800 px-4 py-3 hover:border-blue-500 hover:bg-zinc-950 transition'; btn.textContent=c.text; btn.onclick=()=>pickBoard(c,btn); box.appendChild(btn); }); startTimer(sec); }
+    function startTimer(sec){ clearInterval(state.timerId); let left=sec; const el=$('timer'); el.textContent=left+'s'; el.classList.add('timer-pulse'); state.timerId=setInterval(()=>{ left--; el.textContent=left+'s'; if(left<=0){ clearInterval(state.timerId); el.classList.remove('timer-pulse'); timeoutBoard(); } },1000); }
+    function lockBoard(){ clearInterval(state.timerId); $('timer').classList.remove('timer-pulse'); $('board-choices').querySelectorAll('button').forEach(b=>b.disabled=true); }
+    function pickBoard(choice,btn){ lockBoard(); state.boardTotal++; if(choice.correct){ state.boardCorrect++; btn.classList.add('border-green-600','bg-green-950'); state.spectrum+=4; } else { btn.classList.add('border-red-600','bg-red-950'); state.spectrum-=6; } updateSpectrum(); setTimeout(nextRound,700); }
+    function timeoutBoard(){ lockBoard(); state.boardTotal++; $('board-prompt').textContent+=' — Time expired.'; state.spectrum-=8; updateSpectrum(); setTimeout(nextRound,900); }
+    function nextRound(){ state.round++; if(state.round>=SCENARIOS.length) return finish(); renderMat(); }
+    function finish(){ show('screen-summary'); const avg=state.rmsSum/Math.max(1,state.matTotal); const matPct=Math.round(Math.max(0,Math.min(100,(avg+25)/45*100))); const boardPct=Math.round((state.boardCorrect/Math.max(1,state.boardTotal))*100); $('sum-mat').textContent=matPct+'%'; $('sum-board').textContent=boardPct+'%'; $('sum-spectrum').textContent=Math.round(state.spectrum); $('sum-recovery').textContent=state.taps; let note=''; if(state.taps>=3) note='Too many taps. Every early tap is max loss — hold position and earn the cheaper exit.'; else if(avg>=10 && boardPct>=70) note='Strong link — mat dominance bought board time and you used it.'; else if(avg<0) note='Mat cost dominated. Safer defaults, and stop bailing early.'; else if(boardPct<50) note='Board broke down under pressure. Try Light tier for a wider clock.'; else note='Solid session. Review rounds where the mat result swung your clock.'; $('sum-note').textContent=note; }
+    function startSession(){ state={round:0,spectrum:50,recovery:$('recovery-mode').checked,tier:state.tier||'medium',rmsSum:0,matTotal:0,boardCorrect:0,boardTotal:0,taps:0,timerId:null,matTimerId:null,matElapsed:0,lastRms:0}; $('mode-label').textContent=state.recovery?`Recovery · ${state.tier}`:'Training'; updateSpectrum(); show('screen-session'); renderMat(); }
+    $('recovery-mode').addEventListener('change',e=>{ $('tier-wrap').classList.toggle('hidden',!e.target.checked); });
+    document.querySelectorAll('.tier-btn').forEach(btn=>{ btn.addEventListener('click',()=>{ state.tier=btn.dataset.tier; document.querySelectorAll('.tier-btn').forEach(b=>{ b.classList.toggle('border-orange-500',b===btn); b.classList.toggle('bg-orange-950',b===btn); }); }); });
+    $('tap-btn').onclick=tapOut;
+    $('start-btn').onclick=startSession;
     $('restart-btn').onclick = () => show('screen-setup');
   </script>
 </body>
