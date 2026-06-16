@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROLL CHESS — Mat → Board</title>
+  <meta name="description" content="Train decisions that matter on the mat and the board. Hybrid BJJ + chess training and competition." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --mat: #ea580c;
+      --board: #1d4ed8;
+      --ink: #09090b;
+    }
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--ink);
+      color: #fafafa;
+    }
+    .bebas { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.06em; }
+    .hero-grid {
+      background:
+        linear-gradient(135deg, rgba(234,88,12,0.12) 0%, transparent 42%),
+        linear-gradient(225deg, rgba(29,78,216,0.14) 0%, transparent 45%),
+        radial-gradient(circle at 50% 120%, rgba(255,255,255,0.04), transparent 55%);
+    }
+    .split-line {
+      background: linear-gradient(90deg, var(--mat), #71717a 50%, var(--board));
+      height: 3px;
+    }
+    .card {
+      background: rgba(24,24,27,0.7);
+      border: 1px solid #27272a;
+      backdrop-filter: blur(8px);
+    }
+    .fade-up { animation: fadeUp 0.8s ease-out both; }
+    .fade-up-2 { animation: fadeUp 0.8s 0.15s ease-out both; }
+    .fade-up-3 { animation: fadeUp 0.8s 0.3s ease-out both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .mat-accent { color: var(--mat); }
+    .board-accent { color: #60a5fa; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <div class="hero-grid flex-1">
+    <header class="max-w-5xl mx-auto px-5 pt-10 pb-4 flex justify-between items-center fade-up">
+      <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-500">Hybrid Training System</p>
+      <a href="https://github.com/lylegill02-cpu/roll-chess" class="text-xs text-zinc-500 hover:text-zinc-300">GitHub</a>
+    </header>
+
+    <section class="max-w-5xl mx-auto px-5 pt-6 pb-16 text-center">
+      <h1 class="bebas text-6xl sm:text-8xl md:text-9xl leading-none fade-up">
+        ROLL<br><span class="text-zinc-500">CHESS</span>
+      </h1>
+      <p class="mt-6 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed fade-up-2">
+        Physical rounds create advantage or disadvantage in the mental game.
+        Train the connection between <span class="mat-accent">mat decisions</span> and
+        <span class="board-accent">board clarity</span>.
+      </p>
+      <div class="split-line max-w-md mx-auto mt-10 mb-10 fade-up-2"></div>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center fade-up-3">
+        <a href="trainer.html" class="bebas text-xl bg-white text-zinc-900 px-10 py-4 hover:bg-zinc-200 transition">
+          Open Trainer v0.5
+        </a>
+        <a href="rules.md" class="text-sm border border-zinc-700 px-8 py-4 hover:border-zinc-500 transition">
+          Competition Rules
+        </a>
+      </div>
+    </section>
+
+    <section class="max-w-5xl mx-auto px-5 pb-20 grid md:grid-cols-3 gap-4">
+      <article class="card p-6 text-left fade-up-2">
+        <p class="text-[10px] uppercase tracking-widest mat-accent mb-3">Mat</p>
+        <h2 class="bebas text-2xl mb-2">12 BJJ Positions</h2>
+        <p class="text-xs text-zinc-500 leading-relaxed">Realistic scenarios — guard, mount, back, clinch, scrambles. Pick the decision you would make under pressure.</p>
+      </article>
+      <article class="card p-6 text-left fade-up-2">
+        <p class="text-[10px] uppercase tracking-widest text-zinc-400 mb-3">Spectrum</p>
+        <h2 class="bebas text-2xl mb-2">Mat → Board</h2>
+        <p class="text-xs text-zinc-500 leading-relaxed">Every mat choice shifts your readiness. Good decisions buy board time. Bad ones tax it.</p>
+      </article>
+      <article class="card p-6 text-left fade-up-2">
+        <p class="text-[10px] uppercase tracking-widest board-accent mb-3">Board</p>
+        <h2 class="bebas text-2xl mb-2">Recovery Mode</h2>
+        <p class="text-xs text-zinc-500 leading-relaxed">Light, Medium, or Heavy tiers simulate competition consequences — timed tactical decisions under fatigue.</p>
+      </article>
+    </section>
+
+    <section class="max-w-3xl mx-auto px-5 pb-20">
+      <div class="card p-8 text-left space-y-4">
+        <h2 class="bebas text-3xl">How It Works</h2>
+        <ol class="text-sm text-zinc-400 space-y-3 list-decimal list-inside">
+          <li><strong class="text-zinc-200">Roll a mat scenario</strong> — choose your line.</li>
+          <li><strong class="text-zinc-200">Watch the spectrum move</strong> — mat-heavy or board-ready.</li>
+          <li><strong class="text-zinc-200">Solve a board decision</strong> — with time scaled to your state.</li>
+          <li><strong class="text-zinc-200">Review the session summary</strong> — mat quality vs board accuracy.</li>
+        </ol>
+        <p class="text-xs text-zinc-600 pt-2">Use Training Mode for practice. Flip on Recovery Mode before class to rehearse real consequences.</p>
+      </div>
+    </section>
+  </div>
+
+  <footer class="text-center py-8 text-xs text-zinc-600 border-t border-zinc-900">
+    ROLL CHESS v0.5 • Mat → Board Spectrum<br>
+    <a href="https://github.com/lylegill02-cpu/roll-chess" class="hover:text-zinc-400">github.com/lylegill02-cpu/roll-chess</a>
+  </footer>
+</body>
+</html>

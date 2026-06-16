@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROLL CHESS • Mat → Board Trainer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --mat: #c2410c;
+      --board: #2563eb;
+      --surface: #0a0a0b;
+    }
+    body { font-family: 'IBM Plex Mono', monospace; background: var(--surface); }
+    .display { font-family: 'Oswald', sans-serif; letter-spacing: 0.04em; }
+    .spectrum-track {
+      background: linear-gradient(90deg, var(--mat) 0%, #52525b 50%, var(--board) 100%);
+    }
+    .spectrum-marker { transition: left 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+    .card-enter { animation: rise 0.45s ease-out both; }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .timer-pulse { animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.55; } }
+  </style>
+</head>
+<body class="text-zinc-100 min-h-screen">
+  <header class="border-b border-zinc-800 px-4 py-5 max-w-3xl mx-auto">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <p class="text-[10px] uppercase tracking-[0.25em] text-zinc-500">v0.5</p>
+        <h1 class="display text-2xl md:text-3xl font-bold">ROLL CHESS</h1>
+        <p class="text-sm text-zinc-400 mt-1">Mat → Board Trainer</p>
+      </div>
+      <a href="index.html" class="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 px-3 py-2">← Home</a>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 py-6 space-y-6" id="app">
+    <!-- Setup -->
+    <section id="screen-setup" class="card-enter space-y-6">
+      <div class="border border-zinc-800 p-5 space-y-4">
+        <h2 class="display text-xl">Session Setup</h2>
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input type="checkbox" id="recovery-mode" class="accent-orange-600 w-4 h-4" />
+          <span>Recovery Mode <span class="text-zinc-500">(mat mistakes cost board time)</span></span>
+        </label>
+        <div id="tier-wrap" class="hidden space-y-2 pl-7">
+          <p class="text-xs text-zinc-500 uppercase tracking-wider">Recovery Tier</p>
+          <div class="flex flex-wrap gap-2">
+            <button data-tier="light" class="tier-btn px-3 py-2 text-xs border border-zinc-700 hover:border-orange-500">Light</button>
+            <button data-tier="medium" class="tier-btn px-3 py-2 text-xs border border-zinc-700 hover:border-orange-500">Medium</button>
+            <button data-tier="heavy" class="tier-btn px-3 py-2 text-xs border border-zinc-700 hover:border-orange-500">Heavy</button>
+          </div>
+        </div>
+        <button id="start-btn" class="display w-full bg-zinc-100 text-zinc-900 py-3 font-semibold hover:bg-white transition">Start Session</button>
+      </div>
+      <p class="text-xs text-zinc-600 leading-relaxed">12 mat scenarios → board decisions. Training mode is consequence-free. Recovery mode simulates competition pressure.</p>
+    </section>
+
+    <!-- Active session -->
+    <section id="screen-session" class="hidden space-y-6">
+      <div class="flex items-center justify-between text-xs text-zinc-500">
+        <span id="round-label">Round 1 / 12</span>
+        <span id="mode-label">Training</span>
+      </div>
+
+      <!-- Spectrum -->
+      <div class="border border-zinc-800 p-4 space-y-3">
+        <div class="flex justify-between text-[10px] uppercase tracking-widest">
+          <span class="text-orange-500">Mat</span>
+          <span id="spectrum-value" class="text-zinc-400">50</span>
+          <span class="text-blue-500">Board</span>
+        </div>
+        <div class="relative h-3 rounded-full spectrum-track">
+          <div id="spectrum-marker" class="spectrum-marker absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-zinc-900 rounded-full shadow-lg" style="left: calc(50% - 8px)"></div>
+        </div>
+        <p id="spectrum-caption" class="text-xs text-zinc-500 text-center">Neutral — equal mat and board readiness</p>
+      </div>
+
+      <!-- Mat phase -->
+      <div id="mat-card" class="border border-zinc-800 p-5 space-y-4 card-enter">
+        <p class="text-[10px] uppercase tracking-[0.2em] text-orange-500">Mat Phase</p>
+        <h3 id="mat-title" class="display text-xl"></h3>
+        <p id="mat-desc" class="text-sm text-zinc-400 leading-relaxed"></p>
+        <div id="mat-choices" class="space-y-2"></div>
+      </div>
+
+      <!-- Board phase -->
+      <div id="board-card" class="hidden border border-zinc-800 p-5 space-y-4 card-enter">
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] uppercase tracking-[0.2em] text-blue-500">Board Phase</p>
+          <p id="timer" class="text-sm font-semibold text-blue-400">30s</p>
+        </div>
+        <pre id="board-fen" class="text-xs bg-zinc-950 border border-zinc-800 p-3 overflow-x-auto text-zinc-300"></pre>
+        <p id="board-prompt" class="text-sm text-zinc-300"></p>
+        <div id="board-choices" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- Summary -->
+    <section id="screen-summary" class="hidden space-y-6 card-enter">
+      <div class="border border-zinc-800 p-5 space-y-4">
+        <h2 class="display text-2xl">Session Complete</h2>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div class="bg-zinc-950 border border-zinc-800 p-3"><p class="text-zinc-500 text-xs">Mat Quality</p><p id="sum-mat" class="display text-2xl text-orange-400"></p></div>
+          <div class="bg-zinc-950 border border-zinc-800 p-3"><p class="text-zinc-500 text-xs">Board Accuracy</p><p id="sum-board" class="display text-2xl text-blue-400"></p></div>
+          <div class="bg-zinc-950 border border-zinc-800 p-3"><p class="text-zinc-500 text-xs">Final Spectrum</p><p id="sum-spectrum" class="display text-2xl"></p></div>
+          <div class="bg-zinc-950 border border-zinc-800 p-3"><p class="text-zinc-500 text-xs">Recovery Hits</p><p id="sum-recovery" class="display text-2xl text-zinc-300"></p></div>
+        </div>
+        <p id="sum-note" class="text-sm text-zinc-400 leading-relaxed"></p>
+        <div class="flex gap-2">
+          <button id="restart-btn" class="flex-1 border border-zinc-700 py-3 text-sm hover:border-zinc-500">New Session</button>
+          <a href="rules.md" class="flex-1 text-center border border-zinc-700 py-3 text-sm hover:border-zinc-500">Rules</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="text-center py-8 text-xs text-zinc-500 border-t border-zinc-800 mt-12">
+    ROLL CHESS v0.5 • Mat → Board Spectrum<br>
+    <a href="https://github.com/lylegill02-cpu/roll-chess" class="hover:text-zinc-400">GitHub</a>
+  </footer>
+
+  <script>
+    const TIERS = {
+      light:  { penalty: 5,  baseTime: 28 },
+      medium: { penalty: 12, baseTime: 22 },
+      heavy:  { penalty: 20, baseTime: 15 }
+    };
+
+    const SCENARIOS = [
+      {
+        mat: { title: 'Closed Guard Bottom', desc: 'Opponent postures up with strong grips. You need to break posture or retain guard.', choices: [
+          { text: 'Collar + sleeve break, pull into closed guard control', q: 'good', d: 8 },
+          { text: 'Open guard early to hunt a sweep', q: 'neutral', d: 2 },
+          { text: 'Flat back, accept posture — wait for them to open', q: 'bad', d: -10 }
+        ]},
+        board: { fen: '8/5k2/5p2/4p3/4P3/5K2/8/8 w - - 0 1', prompt: 'White to move. King activity decides the pawn endgame.', choices: [
+          { text: 'Ke4 — centralize the king', correct: true },
+          { text: 'Kf2 — passive retreat', correct: false },
+          { text: 'g4 — pawn push without king support', correct: false }
+        ]}
+      },
+      {
+        mat: { title: 'Half Guard Bottom', desc: 'Underhook battle. They are flattening your hips toward the mat.', choices: [
+          { text: 'Win underhook, knee shield, recover to dogfight', q: 'good', d: 7 },
+          { text: 'Lock down and stall for reset', q: 'neutral', d: 1 },
+          { text: 'Give up underhook and turn away', q: 'bad', d: -12 }
+        ]},
+        board: { fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4', prompt: 'Scholar\'s Mate pattern — find the forcing continuation.', choices: [
+          { text: 'Qxf7#', correct: true },
+          { text: 'Bxf7+ Kh8', correct: false },
+          { text: 'Qh4+ g6', correct: false }
+        ]}
+      },
+      {
+        mat: { title: 'Side Control Bottom', desc: 'Heavy crossface and underhook. Elbow escape window is narrow.', choices: [
+          { text: 'Frame on hip/neck, shrimp, recover guard', q: 'good', d: 9 },
+          { text: 'Bridge hard once without frames', q: 'neutral', d: 0 },
+          { text: 'Turn into them without frames', q: 'bad', d: -11 }
+        ]},
+        board: { fen: '6k1/5ppp/8/8/8/5PPP/5PK1/8 w - - 0 1', prompt: 'Convert the extra pawn safely.', choices: [
+          { text: 'g4 — create a passed pawn', correct: true },
+          { text: 'Kh1 — passive', correct: false },
+          { text: 'f4?? — weakens king', correct: false }
+        ]}
+      },
+      {
+        mat: { title: 'Mount Bottom', desc: 'Opponent has high mount. Grips are loose.', choices: [
+          { text: 'Trap and roll with solid elbow connection', q: 'good', d: 10 },
+          { text: 'Elbow escape to half guard', q: 'neutral', d: 3 },
+          { text: 'Bench press bridge with no trap setup', q: 'bad', d: -9 }
+        ]},
+        board: { fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 2 2', prompt: 'Black just played ...e5. Best developing reply for White?', choices: [
+          { text: 'Nxe5 — grab the pawn', correct: false },
+          { text: 'd4 — challenge the center', correct: true },
+          { text: 'h3 — slow', correct: false }
+        ]}
+      },
+      {
+        mat: { title: 'Back Taken — Seat Belt', desc: 'Hooks in. They are hunting a choke.', choices: [
+          { text: 'Two-on-one choke hand, head low, escape side', q: 'good', d: 8 },
+          { text: 'Hand fight without addressing choke arm first', q: 'neutral', d: -1 },
+          { text: 'Cross grip and sit up into choke', q: 'bad', d: -13 }
+        ]},
+        board: { fen: '8/8/1K6/8/8/8/8/k7 w - - 0 1', prompt: 'Opposition in a king-and-pawn race.', choices: [
+          { text: 'Kc6 — take opposition', correct: true },
+          { text: 'Ka6 — wrong file', correct: false },
+          { text: 'Kb5 — loses tempo', correct: false }
+        ]}
+      },
+      {
+        mat: { title: 'Turtle', desc: 'Opponent is circling for back take.', choices: [
+          { text: 'Granby roll toward open space', q: 'good', d: 7 },
+          { text: 'Sit-out to guard when space appears', q: 'neutral', d: 2 },
+          { text: 'Stay balled up and absorb pressure', q: 'bad', d: -8 }
+        ]},
+        board: { fen: '8/8/8/4k3/8/8/8/4K2R w - - 0 1', prompt: 'Use the rook to cut off the enemy king.', choices: [
+          { text: 'Rh8 — cut off on 8th rank', correct: true },
+          { text: 'Kd2 — passive king walk', correct: false },
+          { text: 'Ra1 — wrong direction', correct: false }
+        ]}
+      },
+      {
+        mat: { title: 'Standing Clinch', desc: 'Double underhooks vs over-unders battle.', choices: [
+          { text: 'Posture break, snap-down to front headlock chain', q: 'good', d: 6 },
+          { text: 'Pummel for underhooks, reset grips', q: 'neutral', d: 1 },
+          { text: 'Lean back with no posture control', q: 'bad', d: -10 }
+        ]},
+        board: { fen: 'r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 4', prompt: 'Italian Game structure — improve piece coordination.', choices: [
+          { text: 'O-O — king safety first', correct: true },
+          { text: 'Ng5 — premature attack', correct: false },
+          { text: 'h3 — slow', correct: false }
+        ]}
+      },
+      {
+        mat: { title: 'Open Guard Passing', desc: 'Dealing with active frames and collar grip.', choices: [
+          { text: 'Grip fight, knee cut with pressure', q: 'good', d: 8 },
+          { text: 'Loose pass to side control attempt', q: 'neutral', d: 2 },
+          { text: 'Jump guard with no base', q: 'bad', d: -12 }
+        ]},
+        board: { fen: '8/8/8/8/1k6/P7/K7/8 w - - 0 1', prompt: 'Promote the pawn with correct king support.', choices: [
+          { text: 'Kb2 — escort the pawn', correct: true },
+          { text: 'a4?? — pawn runs alone', correct: false },
+          { text: 'Ka1 — too passive', correct: false }
+        ]}
+      },
+      {
+        mat: { title: 'De La Riva Guard', desc: 'Hook is deep. They are trying to backstep.', choices: [
+          { text: 'Off-balance, sit-up sweep to top', q: 'good', d: 9 },
+          { text: 'Retain DLR, wait for clearer angle', q: 'neutral', d: 0 },
+          { text: 'Release hook and accept pass', q: 'bad', d: -11 }
+        ]},
+        board: { fen: '6k1/5p2/4p3/8/8/4P3/5P2/4K2R w - - 0 1', prompt: 'Rook behind the passed pawn principle.', choices: [
+          { text: 'Rh7 — rook behind pawn', correct: true },
+          { text: 'Kd2 — slow', correct: false },
+          { text: 'f4 — weakens structure', correct: false }
+        ]}
+      },
+      {
+        mat: { title: 'Side Control Top', desc: 'Crossface secure. Partner is framing hard.', choices: [
+          { text: 'Isolate near arm, advance to mount', q: 'good', d: 7 },
+          { text: 'Switch to knee-on-belly for control', q: 'neutral', d: 3 },
+          { text: 'Jump to mount with no arm control', q: 'bad', d: -9 }
+        ]},
+        board: { fen: '8/8/8/8/8/2k5/8/2K5 w - - 0 1', prompt: 'Drawn king-and-pawn — hold the draw.', choices: [
+          { text: 'Kb1 — stay in the square', correct: true },
+          { text: 'Kd1 — wrong approach', correct: false },
+          { text: 'Ka1 — loses opposition', correct: false }
+        ]}
+      },
+      {
+        mat: { title: 'North-South Bottom', desc: 'Shoulders pinned. Breathing is compressed.', choices: [
+          { text: 'Frame on hips, bridge to recover guard', q: 'good', d: 8 },
+          { text: 'Turn to side — risky but possible', q: 'neutral', d: -2 },
+          { text: 'Flat panic bridge with no frames', q: 'bad', d: -10 }
+        ]},
+        board: { fen: '4k3/8/8/8/8/8/8/4K2R w - - 0 1', prompt: 'Basic rook check to win tempo.', choices: [
+          { text: 'Rh8+ — skewer pattern setup', correct: true },
+          { text: 'Ke2 — passive', correct: false },
+          { text: 'Ra1 — no check', correct: false }
+        ]}
+      },
+      {
+        mat: { title: 'Guard Recovery Scramble', desc: 'You just escaped side control. They are re-passing.', choices: [
+          { text: 'Technical stand-up with wrist control', q: 'good', d: 6 },
+          { text: 'Insert knee shield and reset guard', q: 'neutral', d: 2 },
+          { text: 'Turn away and give up back', q: 'bad', d: -12 }
+        ]},
+        board: { fen: '8/8/8/3k4/8/3K4/8/8 w - - 0 1', prompt: 'Opposition endgame — seize the key square.', choices: [
+          { text: 'Kd4 — central opposition', correct: true },
+          { text: 'Kc3 — passive', correct: false },
+          { text: 'Ke3 — allows ...Ke5', correct: false }
+        ]}
+      }
+    ];
+
+    let state = {
+      round: 0,
+      spectrum: 50,
+      recovery: false,
+      tier: 'medium',
+      matGood: 0,
+      matTotal: 0,
+      boardCorrect: 0,
+      boardTotal: 0,
+      recoveryHits: 0,
+      timerId: null,
+      matChoice: null
+    };
+
+    const $ = id => document.getElementById(id);
+
+    function show(id) {
+      ['screen-setup', 'screen-session', 'screen-summary'].forEach(s => $(s).classList.add('hidden'));
+      $(id).classList.remove('hidden');
+    }
+
+    function spectrumCaption(v) {
+      if (v < 30) return 'Mat-heavy — board decisions will be harder';
+      if (v < 45) return 'Fatigued — reduced clarity on the board';
+      if (v < 55) return 'Neutral — equal mat and board readiness';
+      if (v < 70) return 'Composed — slight board advantage';
+      return 'Board-ready — sharp tactical window';
+    }
+
+    function updateSpectrum() {
+      state.spectrum = Math.max(0, Math.min(100, state.spectrum));
+      $('spectrum-value').textContent = state.spectrum;
+      $('spectrum-marker').style.left = `calc(${state.spectrum}% - 8px)`;
+      $('spectrum-caption').textContent = spectrumCaption(state.spectrum);
+    }
+
+    function matScore(q) {
+      if (q === 'good') return 1;
+      if (q === 'neutral') return 0.5;
+      return 0;
+    }
+
+    function renderMat() {
+      const s = SCENARIOS[state.round];
+      $('round-label').textContent = `Round ${state.round + 1} / ${SCENARIOS.length}`;
+      $('mat-title').textContent = s.mat.title;
+      $('mat-desc').textContent = s.mat.desc;
+      const box = $('mat-choices');
+      box.innerHTML = '';
+      s.mat.choices.forEach((c, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full text-left text-sm border border-zinc-800 px-4 py-3 hover:border-orange-500 hover:bg-zinc-950 transition';
+        btn.textContent = c.text;
+        btn.onclick = () => pickMat(c);
+        box.appendChild(btn);
+      });
+      $('mat-card').classList.remove('hidden');
+      $('board-card').classList.add('hidden');
+    }
+
+    function pickMat(choice) {
+      state.matChoice = choice;
+      state.matTotal++;
+      state.matGood += matScore(choice.q);
+      state.spectrum += choice.d;
+      if (state.recovery && choice.q === 'bad') state.recoveryHits++;
+      updateSpectrum();
+      $('mat-choices').querySelectorAll('button').forEach(b => b.disabled = true);
+      setTimeout(showBoard, 400);
+    }
+
+    function boardTime() {
+      const t = TIERS[state.tier];
+      let sec = t.baseTime;
+      if (state.recovery) {
+        sec -= Math.floor((50 - state.spectrum) / 5);
+        if (state.matChoice?.q === 'bad') sec -= t.penalty;
+      } else {
+        sec += Math.floor((state.spectrum - 50) / 8);
+      }
+      return Math.max(8, sec);
+    }
+
+    function showBoard() {
+      const s = SCENARIOS[state.round];
+      $('mat-card').classList.add('hidden');
+      $('board-card').classList.remove('hidden');
+      $('board-fen').textContent = s.board.fen;
+      $('board-prompt').textContent = s.board.prompt;
+      const box = $('board-choices');
+      box.innerHTML = '';
+      s.board.choices.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full text-left text-sm border border-zinc-800 px-4 py-3 hover:border-blue-500 hover:bg-zinc-950 transition';
+        btn.textContent = c.text;
+        btn.onclick = () => pickBoard(c, btn);
+        box.appendChild(btn);
+      });
+      startTimer(boardTime());
+    }
+
+    function startTimer(sec) {
+      clearInterval(state.timerId);
+      let left = sec;
+      const el = $('timer');
+      el.textContent = left + 's';
+      el.classList.add('timer-pulse');
+      state.timerId = setInterval(() => {
+        left--;
+        el.textContent = left + 's';
+        if (left <= 0) {
+          clearInterval(state.timerId);
+          el.classList.remove('timer-pulse');
+          timeoutBoard();
+        }
+      }, 1000);
+    }
+
+    function lockBoard() {
+      clearInterval(state.timerId);
+      $('timer').classList.remove('timer-pulse');
+      $('board-choices').querySelectorAll('button').forEach(b => b.disabled = true);
+    }
+
+    function pickBoard(choice, btn) {
+      lockBoard();
+      state.boardTotal++;
+      if (choice.correct) {
+        state.boardCorrect++;
+        btn.classList.add('border-green-600', 'bg-green-950');
+        state.spectrum += 4;
+      } else {
+        btn.classList.add('border-red-600', 'bg-red-950');
+        state.spectrum -= 6;
+      }
+      updateSpectrum();
+      setTimeout(nextRound, 700);
+    }
+
+    function timeoutBoard() {
+      lockBoard();
+      state.boardTotal++;
+      $('board-prompt').textContent += ' — Time expired.';
+      state.spectrum -= 8;
+      updateSpectrum();
+      setTimeout(nextRound, 900);
+    }
+
+    function nextRound() {
+      state.round++;
+      if (state.round >= SCENARIOS.length) return finish();
+      renderMat();
+    }
+
+    function finish() {
+      show('screen-summary');
+      const matPct = Math.round((state.matGood / state.matTotal) * 100);
+      const boardPct = Math.round((state.boardCorrect / state.boardTotal) * 100);
+      $('sum-mat').textContent = matPct + '%';
+      $('sum-board').textContent = boardPct + '%';
+      $('sum-spectrum').textContent = state.spectrum;
+      $('sum-recovery').textContent = state.recovery ? state.recoveryHits : '—';
+      let note = '';
+      if (state.spectrum >= 60 && boardPct >= 70) note = 'Strong connection — mat composure carried into board clarity.';
+      else if (state.spectrum < 40) note = 'Mat cost dominated. Focus on safer defaults before class.';
+      else if (boardPct < 50) note = 'Board decisions broke down under pressure. Try Recovery Mode at Light tier.';
+      else note = 'Solid session. Review positions where mat and board diverged.';
+      $('sum-note').textContent = note;
+    }
+
+    function startSession() {
+      state = {
+        round: 0,
+        spectrum: 50,
+        recovery: $('recovery-mode').checked,
+        tier: state.tier || 'medium',
+        matGood: 0,
+        matTotal: 0,
+        boardCorrect: 0,
+        boardTotal: 0,
+        recoveryHits: 0,
+        timerId: null,
+        matChoice: null
+      };
+      $('mode-label').textContent = state.recovery
+        ? `Recovery · ${state.tier}`
+        : 'Training';
+      updateSpectrum();
+      show('screen-session');
+      renderMat();
+    }
+
+    $('recovery-mode').addEventListener('change', e => {
+      $('tier-wrap').classList.toggle('hidden', !e.target.checked);
+    });
+
+    document.querySelectorAll('.tier-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.tier = btn.dataset.tier;
+        document.querySelectorAll('.tier-btn').forEach(b => {
+          b.classList.toggle('border-orange-500', b === btn);
+          b.classList.toggle('bg-orange-950', b === btn);
+        });
+      });
+    });
+
+    $('start-btn').onclick = startSession;
+    $('restart-btn').onclick = () => show('screen-setup');
+  </script>
+</body>
+</html>
