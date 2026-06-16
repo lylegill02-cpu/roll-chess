@@ -8,9 +8,9 @@ ROLL CHESS is a hybrid training and competition system that combines Brazilian J
 
 | Page | GitHub Pages | Inkwell |
 |------|--------------|---------|
-| **Landing** | [lylegill02-cpu.github.io/roll-chess](https://lylegill02-cpu.github.io/roll-chess) | [inkwell.wiki/chess](https://inkwell.wiki/chess) |
-| **Trainer v0.5** | […/trainer.html](https://lylegill02-cpu.github.io/roll-chess/trainer.html) | [inkwell.wiki/chess-trainer](https://inkwell.wiki/chess-trainer) |
-| **Rules v1.1** | […/rules.html](https://lylegill02-cpu.github.io/roll-chess/rules.html) | [inkwell.wiki/chess-rules](https://inkwell.wiki/chess-rules) |
+| **Landing** | [lylegill02-cpu.github.io/roll-chess](https://lylegill02-cpu.github.io/roll-chess) | [inkwell.wiki/roll-chess](https://inkwell.wiki/roll-chess) |
+| **Trainer v0.5** | […/trainer.html](https://lylegill02-cpu.github.io/roll-chess/trainer.html) | [inkwell.wiki/roll-chess-trainer](https://inkwell.wiki/roll-chess-trainer) |
+| **Rules v1.1** | […/rules.html](https://lylegill02-cpu.github.io/roll-chess/rules.html) | [inkwell.wiki/roll-chess-rules](https://inkwell.wiki/roll-chess-rules) |
 
 ## What is it?
 

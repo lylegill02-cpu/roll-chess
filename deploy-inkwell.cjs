@@ -17,32 +17,32 @@ function inkwellize(html, pairs) {
   return out;
 }
 
-function patchHome(html) {
-  let out = html;
-  if (!out.includes('href="/chess"')) {
-    out = out.replace(
-      '<a href="/ground-news">Ground News</a>\n    <a href="/store">Store</a>',
-      '<a href="/ground-news">Ground News</a>\n    <a href="/chess">Roll Chess</a>\n    <a href="/store">Store</a>'
-    );
-  }
-  return out;
-}
+const SLUGS = {
+  landing: 'roll-chess',
+  trainer: 'roll-chess-trainer',
+  rules: 'roll-chess-rules',
+};
 
 async function main() {
   const landing = inkwellize(read('index.html'), [
-    ['href="trainer.html"', 'href="/chess-trainer"'],
-    ['href="rules.md"', 'href="/chess-rules"'],
+    ['href="trainer.html"', `href="/${SLUGS.trainer}"`],
+    ['href="rules.md"', `href="/${SLUGS.rules}"`],
+    ['href="rules.html"', `href="/${SLUGS.rules}"`],
   ]);
   const trainer = inkwellize(read('trainer.html'), [
-    ['href="index.html"', 'href="/chess"'],
-    ['href="rules.md"', 'href="/chess-rules"'],
+    ['href="index.html"', `href="/${SLUGS.landing}"`],
+    ['href="rules.md"', `href="/${SLUGS.rules}"`],
+    ['href="rules.html"', `href="/${SLUGS.rules}"`],
   ]);
-  const rules = read('rules.html');
+  const rules = inkwellize(read('rules.html'), [
+    ['href="/chess-trainer"', `href="/${SLUGS.trainer}"`],
+    ['href="/chess"', `href="/${SLUGS.landing}"`],
+  ]);
 
   const jobs = [
-    ['chess', landing],
-    ['chess-trainer', trainer],
-    ['chess-rules', rules],
+    [SLUGS.landing, landing],
+    [SLUGS.trainer, trainer],
+    [SLUGS.rules, rules],
   ];
 
   let ok = true;
@@ -50,14 +50,7 @@ async function main() {
     if (!(await deployPage(slug, html))) ok = false;
   }
 
-  const homeRestore = path.join(ROOT, '_inkwell-home-restore.txt');
-  if (fs.existsSync(homeRestore) && process.env.PATCH_INKWELL_HOME === '1') {
-    const home = patchHome(read('_inkwell-home-restore.txt'));
-    if (!(await deployPage('inkwell-home', home))) ok = false;
-    else console.log('inkwell-home updated with Roll Chess link');
-  } else {
-    console.log('Skip inkwell-home (set PATCH_INKWELL_HOME=1 to patch from _inkwell-home-restore.txt)');
-  }
+  console.log('Skip inkwell-home (run patch-inkwell-nav.cjs separately)');
 
   process.exit(ok ? 0 : 1);
 }
