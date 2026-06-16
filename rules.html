@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROLL CHESS Rules v1.1</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'IBM Plex Mono', monospace; background: #0a0a0b; color: #e4e4e7; }
+    .display { font-family: 'Oswald', sans-serif; letter-spacing: 0.04em; }
+    .prose h2 { font-family: 'Oswald', sans-serif; font-size: 1.35rem; margin-top: 2rem; margin-bottom: 0.75rem; color: #fafafa; }
+    .prose h3 { font-size: 0.95rem; color: #a1a1aa; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+    .prose p, .prose li { font-size: 0.85rem; line-height: 1.65; color: #a1a1aa; }
+    .prose table { width: 100%; font-size: 0.75rem; border-collapse: collapse; margin: 1rem 0; }
+    .prose th, .prose td { border: 1px solid #3f3f46; padding: 0.5rem; text-align: left; }
+    .prose th { background: #18181b; color: #e4e4e7; }
+  </style>
+</head>
+<body class="min-h-screen">
+  <header class="border-b border-zinc-800 px-4 py-5 max-w-3xl mx-auto flex justify-between items-center">
+    <div>
+      <p class="text-[10px] uppercase tracking-[0.25em] text-zinc-500">v1.1</p>
+      <h1 class="display text-2xl font-bold">Hybrid Competition Rules</h1>
+    </div>
+    <a href="/chess" class="text-xs text-zinc-500 hover:text-zinc-300">← Home</a>
+  </header>
+  <main class="max-w-3xl mx-auto px-4 py-8 prose">
+    <p><strong>Effective:</strong> June 2026 · <strong>Format:</strong> Alternating mat rounds and chess games with linked consequences</p>
+
+    <h2>1. Overview</h2>
+    <p>ROLL CHESS is a hybrid competition where <strong>mat performance directly modifies chess conditions</strong>. Competitors alternate between a <strong>Mat Phase</strong> (timed BJJ sparring or positional rounds) and a <strong>Board Phase</strong> (standard chess, rapid or blitz per event tier).</p>
+
+    <h2>2. Equipment</h2>
+    <ul class="list-disc pl-5 space-y-1">
+      <li>Standard chess set and clock (digital recommended)</li>
+      <li>BJJ gi or no-gi per event rules</li>
+      <li>Mat area and board area separated but visible to both competitors</li>
+      <li>Optional: ROLL CHESS spectrum tracker (trainer app or official score sheet)</li>
+    </ul>
+
+    <h2>3. Match Structure</h2>
+    <h3>3.1 Default Format (Standard Hybrid)</h3>
+    <table>
+      <tr><th>Segment</th><th>Duration</th><th>Notes</th></tr>
+      <tr><td>Mat Round 1</td><td>5 min</td><td>Positional or rolling per division</td></tr>
+      <tr><td>Board Game 1</td><td>10+5 rapid</td><td>Consequences from Mat 1 apply</td></tr>
+      <tr><td>Mat Round 2</td><td>5 min</td><td>Fresh positional start</td></tr>
+      <tr><td>Board Game 2</td><td>10+5 rapid</td><td>Consequences from Mat 2 apply</td></tr>
+    </table>
+    <h3>3.2 Sprint Format</h3>
+    <p>One 4-minute mat round → one 5+3 blitz game. Used for brackets and open mat nights.</p>
+
+    <h2>4. The Mat → Board Spectrum</h2>
+    <table>
+      <tr><th>Range</th><th>State</th><th>Board Effect</th></tr>
+      <tr><td>0–29</td><td>Mat-heavy</td><td>−30 sec starting time, no takeback offers</td></tr>
+      <tr><td>30–44</td><td>Fatigued</td><td>−15 sec starting time</td></tr>
+      <tr><td>45–55</td><td>Neutral</td><td>Standard time</td></tr>
+      <tr><td>56–69</td><td>Composed</td><td>+5 sec starting time</td></tr>
+      <tr><td>70–100</td><td>Board-ready</td><td>+10 sec, optional second takeback in casual tiers</td></tr>
+    </table>
+
+    <h2>5. Mat Phase Scoring (DQS)</h2>
+    <table>
+      <tr><th>Outcome</th><th>DQS</th><th>Spectrum Δ</th></tr>
+      <tr><td>Dominant control / clean submission attempt</td><td>+15 to +20</td><td>Toward Board</td></tr>
+      <tr><td>Solid positional maintenance</td><td>+5 to +10</td><td>Slight toward Board</td></tr>
+      <tr><td>Neutral stalemate</td><td>0</td><td>No change</td></tr>
+      <tr><td>Repeated defensive errors</td><td>−5 to −10</td><td>Toward Mat</td></tr>
+      <tr><td>Tap, stalling, or safety violation</td><td>−15 to −25</td><td>Strong toward Mat</td></tr>
+    </table>
+
+    <h2>6. Board Phase Consequences</h2>
+    <h3>6.2 Graduated Penalties (v1.1)</h3>
+    <table>
+      <tr><th>Mat Event</th><th>Light</th><th>Medium</th><th>Heavy</th></tr>
+      <tr><td>Single DQS −5</td><td>Warning only</td><td>−5 sec</td><td>−10 sec</td></tr>
+      <tr><td>DQS −10 or worse</td><td>−5 sec</td><td>−15 sec</td><td>−30 sec</td></tr>
+      <tr><td>Tap in mat round</td><td>−10 sec</td><td>−20 sec</td><td>−45 sec + blitz only next board</td></tr>
+      <tr><td>Two consecutive bad rounds</td><td>−10 sec</td><td>−25 sec</td><td>Must play board before 60 sec recovery</td></tr>
+    </table>
+
+    <h2>7. Winning the Match</h2>
+    <p>Most board points (wins = 1, draw = 0.5 each). Tiebreakers: aggregate spectrum, combined mat DQS, Armageddon blitz.</p>
+
+    <h2>8. Divisions</h2>
+    <table>
+      <tr><th>Division</th><th>Mat</th><th>Board</th><th>Tier Default</th></tr>
+      <tr><td>Youth</td><td>Positional, 3 min</td><td>5+3</td><td>Light</td></tr>
+      <tr><td>Adult Rec</td><td>5 min roll</td><td>10+5</td><td>Light / Medium</td></tr>
+      <tr><td>Competitive</td><td>5 min roll</td><td>10+5</td><td>Medium</td></tr>
+      <tr><td>Open</td><td>6 min roll</td><td>5+3</td><td>Medium / Heavy</td></tr>
+    </table>
+
+    <h2>10. Trainer App Alignment</h2>
+    <p>The <a href="/chess-trainer" class="text-blue-400 hover:underline">ROLL CHESS Trainer v0.5</a> simulates these rules. Training Mode is consequence-free; Recovery Mode applies tiered time penalties after poor mat choices.</p>
+
+    <p class="text-zinc-600 text-xs pt-8 border-t border-zinc-800 mt-10">ROLL CHESS — Mat performance is board preparation.</p>
+  </main>
+  <footer class="text-center py-8 text-xs text-zinc-600 border-t border-zinc-900">
+    <a href="/chess-trainer" class="hover:text-zinc-400">Open Trainer</a> ·
+    <a href="https://github.com/lylegill02-cpu/roll-chess" class="hover:text-zinc-400">GitHub</a>
+  </footer>
+</body>
+</html>
